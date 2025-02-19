@@ -1,0 +1,24 @@
+.navBar {
+    background-color: white;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2vh
+}
+
+.logo {
+    color: red;
+}
+
+.navLinks {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+}
+
+.navLinks a {
+    color: red;
+}
