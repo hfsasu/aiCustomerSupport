@@ -1,24 +1,49 @@
 .navBar {
     background-color: white;
+    width: 100%;
 }
     
 .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2vh
 }
     
 .logo {
     color: red;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
+    padding-left: 3vw;
 }
     
 .navLinks {
     display: flex;
     justify-content: space-between;
-    width: 200px;
+    font-family: "Karla";
+    font-size: 20px;
+    padding-top: 4vh;
+    margin-left: auto;
+    gap: 4vw;
 }
      
 .navLinks a {
-    color: red;
+    color: rgb(198, 0, 30);
+}
+
+.thinLine {
+    background-color: rgb(198, 0, 30);
+    width: 100vw;
+    height: .4vh;
+}
+
+.whiteSpace {
+    background-color: white;
+    width: 100vw;
+    height: .75vh;
+}
+
+.thickLine {
+    background-color: rgb(198, 0, 30);
+    width: 100vw;
+    height: .75vh;
 }
