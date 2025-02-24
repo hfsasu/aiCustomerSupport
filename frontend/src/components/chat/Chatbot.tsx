@@ -1,0 +1,235 @@
+"use client"
+
+import type React from "react"
+import { useState, useCallback, useEffect } from "react"
+import { ChatContainer } from "./ChatContainer"
+import { ChatInput } from "./ChatInput"
+import { ChatHistory } from "./ChatHistory"
+import { useToast } from "../ui/use-toast"
+
+interface Message {
+  role: "assistant" | "user"
+  content: string
+}
+
+interface Conversation {
+  id: string
+  title: string
+  timestamp: string
+  messages: Message[]
+}
+
+const INITIAL_MESSAGE: Message = {
+  role: "assistant",
+  content:
+    "Hello! I'm your In-N-Out AI assistant. I can help you place orders, customize menu items, and answer any questions about our food and services. What can I help you with today?",
+}
+
+export function Chatbot() {
+  const [conversations, setConversations] = useState<Conversation[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("chat-history")
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
+
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    localStorage.setItem("chat-history", JSON.stringify(conversations))
+  }, [conversations])
+
+  const getCurrentMessages = useCallback(() => {
+    if (!currentChatId) return [INITIAL_MESSAGE]
+    const conversation = conversations.find((c) => c.id === currentChatId)
+    return conversation ? conversation.messages : [INITIAL_MESSAGE]
+  }, [conversations, currentChatId])
+
+  const createNewChat = useCallback(() => {
+    const newId = Date.now().toString()
+    setConversations((prev) => [
+      {
+        id: newId,
+        title: "New Conversation",
+        timestamp: new Date().toLocaleTimeString(),
+        messages: [INITIAL_MESSAGE],
+      },
+      ...prev,
+    ])
+    setCurrentChatId(newId)
+  }, [])
+
+  const updateChatTitle = useCallback((id: string, messages: Message[]) => {
+    const firstUserMessage = messages.find((m) => m.role === "user")
+    if (firstUserMessage) {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === id
+            ? {
+                ...conv,
+                title: firstUserMessage.content.slice(0, 30) + "...",
+              }
+            : conv
+        )
+      )
+    }
+  }, [])
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!input.trim() || isLoading) return
+
+      // If no current chat, create a new one
+      if (!currentChatId) {
+        createNewChat()
+      }
+
+      const userMessage: Message = {
+        role: "user",
+        content: input.trim(),
+      }
+
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === currentChatId
+            ? {
+                ...conv,
+                messages: [...conv.messages, userMessage],
+                timestamp: new Date().toLocaleTimeString(),
+              }
+            : conv
+        )
+      )
+
+      setInput("")
+      setIsLoading(true)
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [...getCurrentMessages(), userMessage],
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to get response")
+        }
+
+        // Handle streaming response
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let assistantMessage = ""
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const chunk = decoder.decode(value)
+            assistantMessage += chunk
+
+            // Update the conversation with the partial response
+            setConversations((prev) =>
+              prev.map((conv) =>
+                conv.id === currentChatId
+                  ? {
+                      ...conv,
+                      messages: [
+                        ...conv.messages.slice(0, -1),
+                        {
+                          role: "assistant",
+                          content: assistantMessage,
+                        },
+                      ],
+                    }
+                  : conv
+              )
+            )
+          }
+        }
+
+        // Update chat title if it's the first user message
+        if (conversations.find((c) => c.id === currentChatId)?.messages.length === 1) {
+          updateChatTitle(currentChatId, [...getCurrentMessages(), userMessage])
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to get response from AI. Please try again.",
+          variant: "destructive",
+        })
+        console.error("Error:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [
+      input,
+      isLoading,
+      currentChatId,
+      conversations,
+      toast,
+      createNewChat,
+      getCurrentMessages,
+      updateChatTitle
+    ]
+  )
+
+  const handleDeleteChat = useCallback(
+    (id: string) => {
+      setConversations((prev) => prev.filter((conv) => conv.id !== id))
+      if (currentChatId === id) {
+        setCurrentChatId(null)
+      }
+    },
+    [currentChatId]
+  )
+
+  const handleRenameChat = useCallback(
+    (id: string, newTitle: string) => {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === id
+            ? {
+                ...conv,
+                title: newTitle,
+              }
+            : conv
+        )
+      )
+    },
+    []
+  )
+
+  return (
+    <div className="flex h-[calc(100vh-4rem)] justify-center">
+      {/* Constrain the width and center the content */}
+      <div className="flex w-full max-w-5xl">
+        <ChatHistory
+          conversations={conversations}
+          currentChatId={currentChatId}
+          onNewChat={createNewChat}
+          onSelectChat={setCurrentChatId}
+          onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
+        />
+        <div className="flex flex-1 flex-col">
+          <ChatContainer messages={getCurrentMessages()} isLoading={isLoading} />
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
