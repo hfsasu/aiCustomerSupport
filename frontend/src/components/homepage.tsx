@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Balancer from "react-wrap-balancer";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { ShoppingCart, Menu } from "lucide-react"; // Re-added icons
 
 export function HeroSectionWithBeamsAndGrid() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,7 +17,7 @@ export function HeroSectionWithBeamsAndGrid() {
   return (
     <div
       ref={parentRef}
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-6 md:px-8 md:py-12 -mt-8"
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-6 md:px-8 md:py-16 -mt-20"
     >
       <BackgroundGrids />
       <CollisionMechanism
@@ -75,37 +76,44 @@ export function HeroSectionWithBeamsAndGrid() {
       <p className="relative z-50 mx-auto mt-4 max-w-lg px-4 text-center text-base/6 text-red-500 dark:text-red-700">
         Quick, intuitive, and available 24/7.
       </p>
+
+      {/* Buttons with Icons */}
       <div className="mb-10 mt-8 flex w-full flex-col items-center justify-center gap-4 px-8 sm:flex-row md:mb-20">
         <Link
           href="#"
           className="group relative z-20 flex h-10 w-full cursor-pointer items-center justify-center space-x-2 rounded-lg bg-black p-px px-4 py-2 text-center text-sm font-semibold leading-6 text-white no-underline transition duration-200 dark:bg-white dark:text-black sm:w-52"
         >
-          Order Now
+          <ShoppingCart className="h-4 w-4" />
+          <span>Order Now</span>
         </Link>
         <Link
           href="/menu"
           className="group relative z-20 flex h-10 w-full cursor-pointer items-center justify-center space-x-2 rounded-lg bg-red-600 p-px px-4 py-2 text-sm font-semibold leading-6 text-white no-underline shadow-input transition duration-200 hover:bg-red-700 dark:bg-red-600 dark:text-white sm:w-52"
         >
-          View Menu
+          <Menu className="h-4 w-4" />
+          <span>View Menu</span>
         </Link>
       </div>
+
+      {/* Image with Hover Effect */}
       <div
         ref={containerRef}
-        className="relative mx-auto max-w-7xl rounded-[32px] border border-neutral-200/50 bg-neutral-100 p-2 backdrop-blur-lg dark:border-neutral-700 dark:bg-neutral-800/50 md:p-4"
+        className="relative mx-auto max-w-7xl rounded-[32px] border border-neutral-200/50 bg-neutral-100 p-2 backdrop-blur-lg transition-all duration-700 hover:scale-[1.02] dark:border-neutral-700 dark:bg-neutral-800/50 md:p-4"
       >
         <div className="rounded-[24px] border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-black">
           <Image
-            src="https://cdn.discordapp.com/attachments/640318753116258324/1343377478386716732/image.png?ex=67bd0d45&is=67bbbbc5&hm=6242e2e82ffbbcb3f9b2b0c22492f1454565a2f9f4987e6f08bc089dd877cf78&"
+            src="https://cdn.discordapp.com/attachments/640318753116258324/1343377478386716732/image.png?ex=67be5ec5&is=67bd0d45&hm=8e1dc2a62e30260f701ccd69aff8820fcaeb45ad58ce643bf70fa1aecd28cfd1&"
             alt="header"
             width={1920}
             height={1080}
-            className="rounded-[20px]"
+            className="rounded-[20px] transition-all duration-300 hover:scale-105 hover:shadow-lg"
           />
         </div>
       </div>
     </div>
   );
 }
+
 
 const BackgroundGrids = () => {
   return (
