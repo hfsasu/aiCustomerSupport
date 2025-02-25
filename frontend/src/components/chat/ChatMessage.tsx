@@ -22,7 +22,7 @@ export function ChatMessage({ message, isLatest }: ChatMessageProps) {
       }`}
     >
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border bg-background shadow">
-        {message.role === "assistant" ? <Bot className="h-5 w-5 text-[#C8102E]" /> : <User className="h-5 w-5" />}
+      {message.role === "assistant" ? <Bot className="h-5 w-5 text-red-600" /> : <User className="h-5 w-5" />}
       </div>
       <div className="flex min-h-[2rem] flex-1 flex-col items-start gap-2">
         <div className="text-sm font-medium">{message.role === "assistant" ? "AI Assistant" : "You"}</div>

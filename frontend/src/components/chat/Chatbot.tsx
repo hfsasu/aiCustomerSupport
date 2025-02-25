@@ -84,9 +84,20 @@ export function Chatbot() {
       e.preventDefault()
       if (!input.trim() || isLoading) return
 
-      // If no current chat, create a new one
+      let chatId = currentChatId
       if (!currentChatId) {
-        createNewChat()
+        const newId = Date.now().toString()
+        setConversations((prev) => [
+          {
+            id: newId,
+            title: "New Conversation",
+            timestamp: new Date().toLocaleTimeString(),
+            messages: [INITIAL_MESSAGE],
+          },
+          ...prev,
+        ])
+        chatId = newId
+        setCurrentChatId(newId)
       }
 
       const userMessage: Message = {
@@ -96,7 +107,7 @@ export function Chatbot() {
 
       setConversations((prev) =>
         prev.map((conv) =>
-          conv.id === currentChatId
+          conv.id === chatId
             ? {
                 ...conv,
                 messages: [...conv.messages, userMessage],
@@ -119,53 +130,66 @@ export function Chatbot() {
         })
 
         if (!response.ok) {
-          throw new Error("Failed to get response")
+          const errorData = await response.json()
+          throw new Error(errorData.details || "Failed to get response")
         }
 
-        // Handle streaming response
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
         let assistantMessage = ""
 
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+        if (!reader) {
+          throw new Error("No response reader available")
+        }
 
-            const chunk = decoder.decode(value)
-            assistantMessage += chunk
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-            // Update the conversation with the partial response
-            setConversations((prev) =>
-              prev.map((conv) =>
-                conv.id === currentChatId
-                  ? {
-                      ...conv,
-                      messages: [
-                        ...conv.messages.slice(0, -1),
-                        {
-                          role: "assistant",
-                          content: assistantMessage,
-                        },
-                      ],
-                    }
-                  : conv
-              )
-            )
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('data: ')
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const parsedData = JSON.parse(line.trim())
+                if (parsedData.text) {
+                  assistantMessage += parsedData.text
+                  
+                  // Find the current conversation
+                  setConversations((prev) =>
+                    prev.map((conv) =>
+                      conv.id === chatId
+                        ? {
+                            ...conv,
+                            messages: [
+                              ...conv.messages.filter(msg => msg.role !== "assistant" || msg !== conv.messages[conv.messages.length - 1]),
+                              {
+                                role: "assistant",
+                                content: assistantMessage,
+                              },
+                            ],
+                          }
+                        : conv
+                    )
+                  )
+                }
+              } catch (e) {
+                continue
+              }
+            }
           }
         }
 
-        // Update chat title if it's the first user message
-        if (conversations.find((c) => c.id === currentChatId)?.messages.length === 1) {
-          updateChatTitle(currentChatId, [...getCurrentMessages(), userMessage])
+        if (conversations.find((c) => c.id === chatId)?.messages.length === 1) {
+          updateChatTitle(chatId, [...getCurrentMessages(), userMessage])
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error("Chat Error:", error)
         toast({
           title: "Error",
-          description: "Failed to get response from AI. Please try again.",
+          description: error.message || "Failed to get response from AI. Please try again.",
           variant: "destructive",
         })
-        console.error("Error:", error)
       } finally {
         setIsLoading(false)
       }
@@ -175,10 +199,9 @@ export function Chatbot() {
       isLoading,
       currentChatId,
       conversations,
-      toast,
-      createNewChat,
       getCurrentMessages,
-      updateChatTitle
+      updateChatTitle,
+      toast
     ]
   )
 
