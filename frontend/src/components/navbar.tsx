@@ -59,6 +59,21 @@ export function Navbar() {
     return null
   }
 
+  const handleFaqClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // If we're not on the homepage, navigate to homepage with #faq
+    if (pathname !== '/') {
+      router.push('/#faq');
+    } else {
+      // If we're already on the homepage, just scroll to the FAQ section
+      const faqSection = document.getElementById('faq');
+      if (faqSection) {
+        faqSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <>
       <motion.nav 
@@ -112,7 +127,8 @@ export function Navbar() {
                   Order
                 </Link>
                 <a 
-                  href="#faq" 
+                  href="/#faq" 
+                  onClick={handleFaqClick}
                   className="text-lg font-medium text-gray-700 transition-colors hover:text-red-700 dark:text-gray-200 dark:hover:text-red-400"
                 >
                   FAQ
@@ -206,6 +222,13 @@ export function Navbar() {
                 >
                   Order
                 </Link>
+                <a 
+                  href="/#faq"
+                  onClick={handleFaqClick}
+                  className="block px-3 py-2 text-sm font-medium hover:bg-accent rounded-md text-gray-600 dark:text-gray-200"
+                >
+                  FAQ
+                </a>
               </div>
             </div>
           )}

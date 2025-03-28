@@ -132,7 +132,7 @@ export function HeroSectionWithBeamsAndGrid() {
             Quick, intuitive, and available 24/7.
           </motion.p>
           <motion.div {...getHeroTitleAnimation(1.05)} className="flex w-full flex-col gap-4 px-6 sm:w-auto sm:flex-row sm:gap-6">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
+            <Button asChild size="lg" className="w-full sm:w-auto bg-red-500 hover:bg-red-600">
               <Link href="/menu">
                 View Our Menu
                 <ArrowRight className="ml-2 h-4 w-4" />
