@@ -235,24 +235,27 @@ const GridLineVertical = ({ className }: { className?: string }) => {
   );
 };
 
-const CollisionMechanism = React.forwardRef<
-  HTMLDivElement,
-  {
-    containerRef: React.RefObject<HTMLDivElement>;
-    parentRef: React.RefObject<HTMLDivElement>;
-    beamOptions?: {
-      initialX?: number;
-      translateX?: number;
-      initialY?: number;
-      translateY?: number;
-      rotate?: number;
-      duration?: number;
-      delay?: number;
-      repeatDelay?: number;
-      className?: string;
-    };
-  }
->(({ containerRef, parentRef, beamOptions = {} }, ref) => {
+interface CollisionMechanismProps {
+  beamOptions?: {
+    initialX?: number;
+    translateX?: number;
+    initialY?: number;
+    translateY?: number;
+    rotate?: number;
+    duration?: number;
+    delay?: number;
+    repeatDelay?: number;
+    className?: string;
+  };
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  parentRef: React.RefObject<HTMLDivElement | null>;
+}
+
+const CollisionMechanism = ({
+  beamOptions = {},
+  containerRef,
+  parentRef,
+}: CollisionMechanismProps) => {
   const beamRef = useRef<HTMLDivElement>(null);
   const [collision, setCollision] = useState<{
     detected: boolean;
@@ -261,8 +264,8 @@ const CollisionMechanism = React.forwardRef<
     detected: false,
     coordinates: null,
   });
-  const [beamKey, setBeamKey] = useState(0);
   const [cycleCollisionDetected, setCycleCollisionDetected] = useState(false);
+  const [beamKey, setBeamKey] = useState(0);
 
   useEffect(() => {
     const checkCollision = () => {
@@ -299,7 +302,7 @@ const CollisionMechanism = React.forwardRef<
     const animationInterval = setInterval(checkCollision, 50);
 
     return () => clearInterval(animationInterval);
-  }, [cycleCollisionDetected, containerRef]);
+  }, [cycleCollisionDetected, containerRef, parentRef]);
 
   useEffect(() => {
     if (collision.detected && collision.coordinates) {
@@ -363,7 +366,7 @@ const CollisionMechanism = React.forwardRef<
       </AnimatePresence>
     </>
   );
-});
+};
 
 CollisionMechanism.displayName = "CollisionMechanism";
 
