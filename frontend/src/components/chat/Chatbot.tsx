@@ -6,6 +6,8 @@ import { ChatContainer } from "./ChatContainer"
 import { ChatInput } from "./ChatInput"
 import { ChatHistory } from "./ChatHistory"
 import { useToast } from "../ui/use-toast"
+import { useCartStore } from "@/lib/store/cart-store"
+import type { MenuItem } from "@/lib/supabase/schema"
 
 interface Message {
   role: "assistant" | "user"
@@ -37,7 +39,27 @@ export function Chatbot() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const { toast } = useToast()
+  const addItem = useCartStore((state) => state.addItem)
+
+  // Fetch menu items for the chatbot to reference
+  useEffect(() => {
+    async function fetchMenuItems() {
+      try {
+        const response = await fetch('/api/menu')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        setMenuItems(data as MenuItem[])
+      } catch (err: any) {
+        console.error("Error fetching menu items for chatbot:", err)
+      }
+    }
+
+    fetchMenuItems()
+  }, [])
 
   useEffect(() => {
     localStorage.setItem("chat-history", JSON.stringify(conversations))
@@ -78,6 +100,64 @@ export function Chatbot() {
       )
     }
   }, [])
+
+  // Process cart actions from AI responses
+  const processCartActions = useCallback((responseText: string) => {
+    // Check if the response contains cart action markers
+    if (responseText.includes("[[ADD_TO_CART:")) {
+      try {
+        // Extract all cart actions
+        const regex = /\[\[ADD_TO_CART:(.*?)\]\]/g;
+        let match;
+        let processedText = responseText;
+        
+        while ((match = regex.exec(responseText)) !== null) {
+          const cartData = JSON.parse(match[1]);
+          
+          // Find the menu item
+          const menuItem = menuItems.find(item => 
+            item.name.toLowerCase() === cartData.itemName.toLowerCase() ||
+            item.id === cartData.itemId
+          );
+          
+          if (menuItem) {
+            // Clear existing items of this type from cart first
+            // This prevents duplicate additions
+            const cartItems = useCartStore.getState().items;
+            const existingItem = cartItems.find(item => item.menuItem?.id === menuItem.id);
+            
+            if (existingItem) {
+              // Remove the existing item before adding a new one
+              useCartStore.getState().removeItem(existingItem.id);
+            }
+            
+            // Add item to cart with explicit quantity of 1
+            addItem(
+              menuItem, 
+              1, // Force quantity to be 1
+              cartData.specialInstructions || ""
+            );
+            
+            // Show toast notification
+            toast({
+              title: "Added to cart",
+              description: `${menuItem.name} added to your cart`,
+            });
+          }
+          
+          // Remove this cart action from the processed text
+          processedText = processedText.replace(match[0], "");
+        }
+        
+        return processedText;
+      } catch (error) {
+        console.error("Error processing cart action:", error);
+        return responseText;
+      }
+    }
+    
+    return responseText;
+  }, [addItem, menuItems, toast]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -126,6 +206,7 @@ export function Chatbot() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: [...getCurrentMessages(), userMessage],
+            menuItems: menuItems, // Pass menu items to the API
           }),
         })
 
@@ -155,6 +236,9 @@ export function Chatbot() {
                 if (parsedData.text) {
                   assistantMessage += parsedData.text
                   
+                  // Process the message for cart actions
+                  const processedMessage = processCartActions(assistantMessage);
+                  
                   // Find the current conversation
                   setConversations((prev) =>
                     prev.map((conv) =>
@@ -165,7 +249,7 @@ export function Chatbot() {
                               ...conv.messages.filter(msg => msg.role !== "assistant" || msg !== conv.messages[conv.messages.length - 1]),
                               {
                                 role: "assistant",
-                                content: assistantMessage,
+                                content: processedMessage,
                               },
                             ],
                           }
@@ -201,7 +285,9 @@ export function Chatbot() {
       conversations,
       getCurrentMessages,
       updateChatTitle,
-      toast
+      toast,
+      menuItems,
+      processCartActions
     ]
   )
 

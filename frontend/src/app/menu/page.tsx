@@ -1,6 +1,6 @@
-import { Menu } from "@/components/menu/Menu"
+import { EnhancedMenu } from "@/components/menu/EnhancedMenu"
 
 export default function MenuPage() {
-  return <Menu />
+  return <EnhancedMenu />
 }
 

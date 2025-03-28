@@ -22,7 +22,7 @@ const item = {
 export function Menu() {
   return (
     <div className="min-h-screen bg-[#FFFAF5] dark:bg-gray-950">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Header with animated underline */}
         <div className="text-center">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative inline-block">

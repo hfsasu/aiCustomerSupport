@@ -1,11 +1,10 @@
-// app/layout.tsx
-import '@/app/globals.css'
-import React from "react"
-import { ClerkProvider } from '@clerk/nextjs'
-import { Inter } from "next/font/google"
+import type React from "react"
+import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Navbar } from "@/components/navbar"
 import { Toaster } from "@/components/ui/toaster"
+import { Inter } from "next/font/google"
+import { Navbar } from "@/components/navbar"
+import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,23 +14,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <Navbar />
-            <main className="mt-16">
-              {children}
-              <Toaster />
-            </main>
+            {children}
+            <Toaster />
           </ThemeProvider>
-        </ClerkProvider>
-      </body>
-    </html>
+          <div id="portal-root" />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
+

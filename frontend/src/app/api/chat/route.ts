@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { NextResponse } from 'next/server';
 
 export const runtime = "edge";
 
@@ -12,68 +13,34 @@ export async function POST(req: Request) {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const { messages } = await req.json();
+    const { messages, menuItems } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Invalid messages format");
     }
 
+    // Create a system message that includes menu information and cart functionality
+    const systemMessage = {
+      role: "system",
+      content: `You are an AI assistant for In-N-Out Burger. You help customers with menu information, order customization, and recommendations.
+
+Menu information: ${JSON.stringify(menuItems)}
+
+IMPORTANT: When a user wants to add an item to their cart, use the following format in your response:
+[[ADD_TO_CART:{"itemName":"Double-Double","quantity":1,"specialInstructions":"No onions"}]]
+
+For example, if a user says "I'd like to order a Double-Double with no onions", you should include:
+[[ADD_TO_CART:{"itemName":"Double-Double","quantity":1,"specialInstructions":"No onions"}]]
+
+Make this part of your response invisible to the user. After the cart action, continue your normal friendly response confirming what was added.
+
+Always be helpful, friendly, and knowledgeable about In-N-Out's menu and culture.`
+    };
+
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: `You are an AI assistant for In-N-Out Burger. You help customers place orders, answer questions about the menu, and provide recommendations.
-
-Key points:
-- Be friendly and helpful
-- Know the In-N-Out menu thoroughly
-- Be able to handle customizations and special requests
-- Provide accurate pricing information
-- Help with dietary restrictions and allergies
-- Make personalized recommendations
-- Handle order modifications
-- Process orders efficiently
-
-Current Menu Items and Prices:
-- Double-Double: $5.95
-- Cheeseburger: $5.95
-- Hamburger: $5.95
-- Fresh French Fries: $5.95
-- Shakes (Chocolate, Vanilla, Strawberry): $5.95
-
-Soft Drinks (Prices for all: Small $2.15, Medium $2.30, Large $2.50, X-Large $2.70):
-- Coke
-- Cherry Coke
-- Diet Coke
-- Seven Up
-- Dr Pepper
-- Root Beer
-- Iced Tea
-- Pink Lemonade
-- Lite Pink Lemonade
-
-Other Beverages:
-- Milk: $0.99
-- Hot Cocoa: $2.30
-- Coffee: $1.35
-
-Meal Combos:
-- Double-Double Meal: $10.65
-- Cheeseburger Meal: $8.85
-- Hamburger Meal: $8.35
-
-Secret Menu Items:
-- Animal Style
-- Protein Style
-- 3x3
-- 4x4
-- Grilled Cheese
-- Animal Style Fries
-- Neapolitan Shake
-
-Always maintain a helpful and friendly tone while staying true to In-N-Out's values and brand identity.`,
-        },
+        systemMessage,
         ...messages
       ],
       temperature: 0.7,

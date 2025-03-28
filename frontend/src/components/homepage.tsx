@@ -3,21 +3,68 @@ import React, { useRef, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import Balancer from "react-wrap-balancer";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { ShoppingCart, Menu } from "lucide-react"; // Re-added icons
+import { ArrowRight, Play, Pause } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+let titleAnimationCounter = 0;
+function getNewAnimationDelay() {
+  titleAnimationCounter++;
+  return titleAnimationCounter * 0.15;
+}
+
+function getHeroTitleAnimation(delay: number) {
+  return {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5, delay }
+  };
+}
 
 export function HeroSectionWithBeamsAndGrid() {
   const containerRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { resolvedTheme } = useTheme();
   const textColor = resolvedTheme === "dark" ? "text-white" : "text-black";
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsVideoLoaded(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+        setIsPlaying(true);
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
 
   return (
     <div
       ref={parentRef}
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-6 md:px-8 md:py-16 -mt-20"
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-6 md:px-8 md:py-16"
     >
       <BackgroundGrids />
       <CollisionMechanism
@@ -61,55 +108,94 @@ export function HeroSectionWithBeamsAndGrid() {
         }}
       />
 
-      <h2 className={`text-balance relative z-50 mx-auto mb-4 mt-[-4rem] max-w-4xl text-center text-3xl font-semibold tracking-tight ${textColor} md:text-7xl`}>
-        <Balancer>
-          The Future of{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-red-700">
-            Fast Food
-          </span>
-        </Balancer>
-      </h2>
-
-      <p className="relative z-50 mx-auto mt-4 max-w-lg px-4 text-center text-base/6 text-black-600 dark:text-gray-200">
-        Experience seamless ordering with our AI assistant
-      </p>
-      <p className="relative z-50 mx-auto mt-4 max-w-lg px-4 text-center text-base/6 text-red-500 dark:text-red-700">
-        Quick, intuitive, and available 24/7.
-      </p>
-
-      {/* Buttons with Icons */}
-      <div className="mb-10 mt-8 flex w-full flex-col items-center justify-center gap-4 px-8 sm:flex-row md:mb-20">
-        <Link
-          href="#"
-          className="group relative z-20 flex h-10 w-full cursor-pointer items-center justify-center space-x-2 rounded-lg bg-black p-px px-4 py-2 text-center text-sm font-semibold leading-6 text-white no-underline transition duration-200 dark:bg-white dark:text-black sm:w-52"
-        >
-          <ShoppingCart className="h-4 w-4" />
-          <span>Order Now</span>
-        </Link>
-        <Link
-          href="/menu"
-          className="group relative z-20 flex h-10 w-full cursor-pointer items-center justify-center space-x-2 rounded-lg bg-red-600 p-px px-4 py-2 text-sm font-semibold leading-6 text-white no-underline shadow-input transition duration-200 hover:bg-red-700 dark:bg-red-600 dark:text-white sm:w-52"
-        >
-          <Menu className="h-4 w-4" />
-          <span>View Menu</span>
-        </Link>
-      </div>
-
-      {/* Image with Hover Effect */}
-      <div
-        ref={containerRef}
-        className="relative mx-auto max-w-7xl rounded-[32px] border border-neutral-200/50 bg-neutral-100 p-2 backdrop-blur-lg transition-all duration-700 hover:scale-[1.02] dark:border-neutral-700 dark:bg-neutral-800/50 md:p-4"
-      >
-        <div className="rounded-[24px] border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-black">
-          <Image
-            src="https://cdn.discordapp.com/attachments/640318753116258324/1343377478386716732/image.png?ex=67be5ec5&is=67bd0d45&hm=8e1dc2a62e30260f701ccd69aff8820fcaeb45ad58ce643bf70fa1aecd28cfd1&"
-            alt="header"
-            width={1920}
-            height={1080}
-            className="rounded-[20px] transition-all duration-300 hover:scale-105 hover:shadow-lg"
-          />
+      <header className="flex w-full flex-col items-center justify-center gap-16 py-24 text-center lg:gap-24 z-50">
+        <div className="flex h-full flex-col items-center justify-center gap-8">
+          <h1 className="relative px-12 text-center font-normal leading-[108px] md:text-8xl lg:text-[10xl]">
+            <motion.span {...getHeroTitleAnimation(0.15)} className={textColor}>
+              welcome
+            </motion.span>{" "}
+            <motion.span {...getHeroTitleAnimation(0.3)} className={textColor}>to</motion.span>{" "}
+            <br className="hidden md:block" />
+            <motion.span {...getHeroTitleAnimation(0.45)} className={textColor}>the</motion.span>{" "}
+            <motion.span {...getHeroTitleAnimation(0.6)} className="italic text-red-600 dark:text-red-500">
+              future
+            </motion.span>{" "}
+            <motion.span {...getHeroTitleAnimation(0.75)} className={textColor}>
+              of fast food
+            </motion.span>
+          </h1>
+          <motion.p 
+            {...getHeroTitleAnimation(0.9)}
+            className="max-w-2xl px-6 text-center text-lg text-red-600 dark:text-red-400"
+          >
+            Experience seamless ordering with our AI assistant. <br className="hidden sm:inline" />
+            Quick, intuitive, and available 24/7.
+          </motion.p>
+          <motion.div {...getHeroTitleAnimation(1.05)} className="flex w-full flex-col gap-4 px-6 sm:w-auto sm:flex-row sm:gap-6">
+            <Button asChild size="lg" className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
+              <Link href="/menu">
+                View Our Menu
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900 dark:hover:bg-red-950">
+              <Link href="/order">
+                Start Ordering
+              </Link>
+            </Button>
+          </motion.div>
         </div>
-      </div>
+        <motion.div
+          className="relative w-full px-8 lg:w-3/4 lg:px-0"
+          {...getHeroTitleAnimation(1.35)}
+          ref={containerRef}
+        >
+          <div className="rounded-[24px] border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-black">
+            <div className="relative rounded-[20px] overflow-hidden">
+              {isVideoLoaded ? (
+                <>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full rounded-[20px] transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                    onLoadedData={() => console.log("Video loaded successfully")}
+                    onError={(e) => console.error("Video error:", e)}
+                  >
+                    <source src="/videos/demo.webm" type="video/webm" />
+                    <source src="/videos/demo.mp4" type="video/mp4" />
+                  </video>
+                  
+                  {/* Play/Pause button overlay */}
+                  <div className="absolute bottom-4 right-4">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white dark:bg-black/70 dark:hover:bg-black/90"
+                      onClick={togglePlayPause}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-4 w-4 text-red-600" />
+                      ) : (
+                        <Play className="h-4 w-4 text-red-600" />
+                      )}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="w-full aspect-video bg-gray-100 dark:bg-gray-800 rounded-[20px] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-red-600 border-t-transparent"></div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading demo...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </header>
     </div>
   );
 }
@@ -138,6 +224,17 @@ const BackgroundGrids = () => {
   );
 };
 
+const GridLineVertical = ({ className }: { className?: string }) => {
+  return (
+    <div
+      className={cn(
+        "absolute top-0 h-full w-px bg-gradient-to-b from-transparent via-neutral-200 to-transparent dark:via-neutral-700",
+        className,
+      )}
+    />
+  );
+};
+
 const CollisionMechanism = React.forwardRef<
   HTMLDivElement,
   {
@@ -149,13 +246,13 @@ const CollisionMechanism = React.forwardRef<
       initialY?: number;
       translateY?: number;
       rotate?: number;
-      className?: string;
       duration?: number;
       delay?: number;
       repeatDelay?: number;
+      className?: string;
     };
   }
->(({ parentRef, containerRef, beamOptions = {} }, ref) => {
+>(({ containerRef, parentRef, beamOptions = {} }, ref) => {
   const beamRef = useRef<HTMLDivElement>(null);
   const [collision, setCollision] = useState<{
     detected: boolean;
@@ -302,40 +399,5 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
         />
       ))}
     </div>
-  );
-};
-
-const GridLineVertical = ({
-  className,
-  offset,
-}: {
-  className?: string;
-  offset?: string;
-}) => {
-  return (
-    <div
-      style={
-        {
-          "--background": "#ffffff",
-          "--color": "rgba(0, 0, 0, 0.2)",
-          "--height": "5px",
-          "--width": "1px",
-          "--fade-stop": "90%",
-          "--offset": offset || "150px",
-          "--color-dark": "rgba(255, 255, 255, 0.3)",
-          maskComposite: "exclude",
-        } as React.CSSProperties
-      }
-      className={cn(
-        "absolute top-[calc(var(--offset)/2*-1)] h-[calc(100%+var(--offset))] w-[var(--width)]",
-        "bg-[linear-gradient(to_bottom,var(--color),var(--color)_50%,transparent_0,transparent)]",
-        "[background-size:var(--width)_var(--height)]",
-        "[mask:linear-gradient(to_top,var(--background)_var(--fade-stop),transparent),_linear-gradient(to_bottom,var(--background)_var(--fade-stop),transparent),_linear-gradient(black,black)]",
-        "[mask-composite:exclude]",
-        "z-30",
-        "dark:bg-[linear-gradient(to_bottom,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
-        className,
-      )}
-    ></div>
   );
 };
