@@ -1,28 +1,51 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useCurrentUser } from "@/lib/store/auth-store"
-import { useOrderStore } from "@/lib/store/order-store"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "date-fns"
 import { ShoppingBag, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import { useAuth } from "@clerk/nextjs"
+import type { Order } from "@/lib/supabase/schema"
 
 export function OrderHistory() {
   const { user, isLoaded, isSignedIn } = useCurrentUser()
   const { isSignedIn: clerkIsSignedIn } = useAuth()
-  const { orders, fetchOrders, isLoading, error } = useOrderStore()
   const router = useRouter()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
-    if (isLoaded && isSignedIn && user) {
-      fetchOrders(user.id)
+    async function fetchOrders() {
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/orders')
+        
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setOrders(data || [])
+      } catch (err) {
+        console.error('Error fetching orders:', err)
+        setError('Failed to load orders. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    if (isLoaded && isSignedIn && clerkIsSignedIn) {
+      fetchOrders()
     } else if (isLoaded && !isSignedIn) {
       router.push("/sign-in?redirect=/order-history")
     }
-  }, [isLoaded, isSignedIn, user, fetchOrders, router])
+  }, [isLoaded, isSignedIn, clerkIsSignedIn, router])
   
   if (!isLoaded || !clerkIsSignedIn) {
     return (
@@ -59,7 +82,7 @@ export function OrderHistory() {
     )
   }
 
-  if (orders.length === 0) {
+  if (!orders || orders.length === 0) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <ShoppingBag className="h-16 w-16 text-gray-300" />
@@ -102,11 +125,11 @@ export function OrderHistory() {
             </div>
 
             <div className="divide-y divide-gray-200 p-4 dark:divide-gray-800">
-              {order.items.map((item) => (
+              {order.items && order.items.map((item) => (
                 <div key={item.id} className="flex justify-between py-3">
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {item.quantity} × {item.menuItem?.name}
+                      {item.quantity} × {item.menuItem?.name || 'Unknown Item'}
                     </p>
                     {item.special_instructions && (
                       <p className="text-sm text-gray-500 dark:text-gray-400">{item.special_instructions}</p>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2, ChevronRight, ShoppingBag, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { PlaceOrderButton } from "@/components/cart/PlaceOrderButton"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore()
@@ -16,6 +17,7 @@ export default function CartPage() {
   // Prefetch checkout page
   useEffect(() => {
     router.prefetch('/checkout')
+    router.prefetch('/order-history')
   }, [router])
 
   const handleCheckout = () => {
@@ -134,13 +136,16 @@ export default function CartPage() {
               >
                 Clear Cart
               </Button>
-              <Button
-                className="bg-red-600 hover:bg-red-700 py-6 px-8 text-base"
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex space-x-3">
+                <PlaceOrderButton className="py-6 px-6 text-base" />
+                <Button
+                  className="bg-red-600 hover:bg-red-700 py-6 px-8 text-base"
+                  onClick={handleCheckout}
+                >
+                  Proceed to Checkout
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}

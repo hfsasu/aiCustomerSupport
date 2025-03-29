@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Bot, User } from "lucide-react"
+import ReactMarkdown from 'react-markdown'
 
 interface ChatMessageProps {
   message: {
@@ -26,7 +27,11 @@ export function ChatMessage({ message, isLatest }: ChatMessageProps) {
       </div>
       <div className="flex min-h-[2rem] flex-1 flex-col items-start gap-2">
         <div className="text-sm font-medium">{message.role === "assistant" ? "AI Assistant" : "You"}</div>
-        <div className="text-sm text-muted-foreground">{message.content}</div>
+        <div className="text-sm text-muted-foreground prose dark:prose-invert max-w-none">
+          <ReactMarkdown>
+            {message.content}
+          </ReactMarkdown>
+        </div>
       </div>
     </motion.div>
   )
