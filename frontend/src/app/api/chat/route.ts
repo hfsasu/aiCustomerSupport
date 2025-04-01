@@ -35,13 +35,17 @@ Always be helpful, friendly, and knowledgeable about In-N-Out's menu and culture
     };
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o", // ✅ or "gpt-4o-mini" if you're testing with cheaper model
-      messages: [systemMessage, ...messages],
+      model: "gpt-4o-mini", 
+      messages: [
+        systemMessage, 
+        ...messages
+      ],
       temperature: 0.7,
       max_tokens: 800,
       stream: true,
     });
 
+    // Create a new ReadableStream
     const readable = new ReadableStream({
       async start(controller) {
         try {
