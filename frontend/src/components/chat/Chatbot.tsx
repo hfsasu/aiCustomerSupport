@@ -264,9 +264,10 @@ export function Chatbot() {
           }
         }
 
-        if (conversations.find((c) => c.id === chatId)?.messages.length === 1) {
+        if (chatId && conversations.find((c) => c.id === chatId)?.messages.length === 1) {
           updateChatTitle(chatId, [...getCurrentMessages(), userMessage])
         }
+        
       } catch (error: any) {
         console.error("Chat Error:", error)
         toast({
