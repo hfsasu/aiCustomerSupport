@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import { Facebook, Instagram, Twitter } from 'lucide-react';
 
 export function Footer() {
   const { theme } = useTheme();
@@ -11,7 +11,7 @@ export function Footer() {
 
   const navigation = [
     { name: "About", href: "https://www.in-n-out.com/history" },
-    { name: "Menu", href: "https://www.in-n-out.com/menu#doubledouble" },
+    { name: "Menu", href: "/menu" },
     { name: "Locations", href: "https://www.in-n-out.com/locations" },
     { name: "Contact", href: "https://www.in-n-out.com/contact" },
   ];
@@ -20,7 +20,6 @@ export function Footer() {
     { name: "Facebook", href: "https://www.facebook.com/innout/", icon: Facebook },
     { name: "Instagram", href: "https://www.instagram.com/innout/?hl=en", icon: Instagram },
     { name: "Twitter", href: "https://x.com/innoutburger?", icon: Twitter },
-    { name: "YouTube", href: "https://www.youtube.com/results?search_query=in+n+out", icon: Youtube },
   ];
 
   return (
@@ -45,8 +44,8 @@ export function Footer() {
             <a
               key={item.name}
               href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
+              target={item.name === "Menu" ? "_self" : "_blank"}
+              rel={item.name === "Menu" ? "" : "noopener noreferrer"}
               className={`text-sm transition-colors duration-200 ${
                 isDark
                   ? 'text-gray-300 hover:text-white'

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useCurrentUser } from "@/lib/store/auth-store"
 import { Portal } from "@/components/ui/portal"
+import { SignInButton } from "@clerk/nextjs"
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -53,6 +54,37 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     window.addEventListener("keydown", handleEscape)
     return () => window.removeEventListener("keydown", handleEscape)
   }, [isOpen, onClose, isMounted])
+
+  // Handle checkout with authentication check
+  const handleCheckout = () => {
+    if (isSignedIn) {
+      router.push("/checkout")
+      onClose()
+    }
+  }
+
+  // Checkout button with authentication check
+  const checkoutButton = isSignedIn ? (
+    <Button
+      type="button"
+      className="w-full bg-red-600 py-6 text-base font-medium hover:bg-red-700"
+      onClick={handleCheckout}
+    >
+      Checkout
+      <ChevronRight className="ml-2 h-4 w-4" />
+    </Button>
+  ) : (
+    <SignInButton mode="modal">
+      <Button
+        type="button"
+        className="w-full bg-red-600 py-6 text-base font-medium hover:bg-red-700"
+        onClick={onClose}
+      >
+        Sign in to Checkout
+        <ChevronRight className="ml-2 h-4 w-4" />
+      </Button>
+    </SignInButton>
+  )
 
   if (!isMounted) return null
 
@@ -151,7 +183,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Footer */}
                 {items.length > 0 && (
                   <div className="border-t border-gray-200 dark:border-gray-800 p-4">
@@ -174,21 +206,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </div>
                       
                       <div className="space-y-3 pt-4">
-                        <Button
-                          type="button"
-                          className="w-full bg-red-600 py-6 text-base font-medium hover:bg-red-700"
-                          onClick={() => {
-                            if (!isSignedIn) {
-                              router.push("/sign-in?redirect=/checkout")
-                            } else {
-                              router.push("/checkout")
-                            }
-                            onClose()
-                          }}
-                        >
-                          Checkout
-                          <ChevronRight className="ml-2 h-4 w-4" />
-                        </Button>
+                        {checkoutButton}
                         <Button
                           type="button"
                           variant="outline"

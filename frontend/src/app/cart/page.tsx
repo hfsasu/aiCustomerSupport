@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2, ChevronRight, ShoppingBag, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { SignInButton } from "@clerk/nextjs"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore()
@@ -19,12 +20,30 @@ export default function CartPage() {
   }, [router])
 
   const handleCheckout = () => {
-    if (!isSignedIn) {
-      router.push("/sign-in?redirect=/checkout")
-      return
+    if (isSignedIn) {
+      router.push("/checkout")
     }
-    router.push("/checkout")
   }
+
+  // Checkout button with authentication check
+  const checkoutButton = isSignedIn ? (
+    <Button
+      className="bg-red-600 hover:bg-red-700 py-6 px-8 text-base"
+      onClick={handleCheckout}
+    >
+      Proceed to Checkout
+      <ChevronRight className="ml-2 h-4 w-4" />
+    </Button>
+  ) : (
+    <SignInButton mode="modal">
+      <Button
+        className="bg-red-600 hover:bg-red-700 py-6 px-8 text-base"
+      >
+        Sign in to Checkout
+        <ChevronRight className="ml-2 h-4 w-4" />
+      </Button>
+    </SignInButton>
+  )
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 pt-20">
@@ -51,6 +70,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Cart items */}
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-800">
               <ul className="divide-y divide-gray-200 dark:divide-gray-800">
                 {items.map((item) => (
@@ -103,6 +123,7 @@ export default function CartPage() {
               </ul>
             </div>
 
+            {/* Order summary */}
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-800 p-6">
               <div className="space-y-4">
                 <div className="flex justify-between">
@@ -134,13 +155,7 @@ export default function CartPage() {
               >
                 Clear Cart
               </Button>
-              <Button
-                className="bg-red-600 hover:bg-red-700 py-6 px-8 text-base"
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
+              {checkoutButton}
             </div>
           </div>
         )}

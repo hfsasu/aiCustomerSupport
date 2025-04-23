@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { CheckCircle2, ShoppingBag, MapPin, CreditCard } from "lucide-react"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, SignInButton } from "@clerk/nextjs"
 
 export function CheckoutForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,13 +44,14 @@ export function CheckoutForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Since we wrapped the checkout page in ProtectedLayout,
+    // this check is redundant but kept for safety
     if (!isSignedIn || !user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to complete your order",
         variant: "destructive",
       })
-      router.push("/sign-in?redirect=/checkout")
       return
     }
 

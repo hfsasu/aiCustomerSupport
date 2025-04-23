@@ -1,6 +1,11 @@
 import { CheckoutForm } from "@/components/checkout/CheckoutForm"
+import ProtectedLayout from "@/components/ProtectedLayout"
 
 export default function CheckoutPage() {
-  return <CheckoutForm />
+  return (
+    <ProtectedLayout>
+      <CheckoutForm />
+    </ProtectedLayout>
+  )
 }
 
