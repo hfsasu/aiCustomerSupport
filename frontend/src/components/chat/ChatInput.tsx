@@ -64,7 +64,7 @@ export function ChatInput({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about our menu, customize your order, or get recommendations..."
+            placeholder="Ask about our menu, customize your order, and more!"
             maxRows={5}
             className="w-full resize-none rounded-lg border border-input bg-background p-4 pr-24 text-sm focus:outline-none focus:border-red-500 focus:border-2 disabled:opacity-50"
             disabled={isLoading || isListening || isSubmitting}
